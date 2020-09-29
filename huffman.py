@@ -5,7 +5,7 @@ import shutil
 
 
 def encode(input_file, output_file):
-	print("encoding ", input_file, output_file)
+	print("Encoding ", input_file, output_file)
 	# write code here
 
 	# simply copying the file to bypass the actual test.
@@ -15,7 +15,7 @@ def encode(input_file, output_file):
 
 
 def decode(input_file, output_file):
-	print("decoding ", input_file, output_file)
+	print("Decoding ", input_file, output_file)
 	# write code here
 
 	# simply copying the file to bypass the actual test.
