@@ -1,0 +1,347 @@
+
+
+By using our site, you acknowledge that you have read and understand our Cookie Policy, Privacy Policy, and our Terms of Service.
+
+Super User is a question and answer site for computer enthusiasts and power users. It only takes a minute to sign up.
+Anybody can ask a question
+Anybody can answer
+The best answers are voted up and rise to the top
+Super User
+
+    Home
+        Questions
+        Tags
+        Users
+        Unanswered
+
+        Jobs
+
+How to auto detect text file encoding?
+Asked 9 years, 4 months ago
+Active 6 months ago
+Viewed 147k times
+79
+30
+
+There are many plain text files which were encoded in variant charsets.
+
+I want to convert them all to UTF-8, but before running iconv, I need to know its original encoding. Most browsers have an Auto Detect option in encodings, however, I can't check those text files one by one because there are too many.
+
+Only having known the original encoding, I then can convert the texts by iconv -f DETECTED_CHARSET -t utf-8.
+
+Is there any utility to detect the encoding of plain text files? It DOES NOT have to be 100% perfect, I don't mind if there're 100 files misconverted in 1,000,000 files.
+linux
+batch
+encoding
+share improve this question follow
+edited Jun 25 '11 at 7:10
+asked Jun 24 '11 at 8:07
+15.5k2323 gold badges8080 silver badges112112 bronze badges
+add a comment
+10 Answers
+69
+
+Try the chardet Python module, which is available on PyPI:
+
+pip install chardet
+
+Then run chardetect myfile.txt.
+
+Chardet is based on the detection code used by Mozilla, so it should give reasonable results, provided that the input text is long enough for statistical analysis. Do read the project documentation.
+
+As mentioned in comments it is quite slow, but some distributions also ship the original C++ version as @Xavier has found in https://superuser.com/a/609056. There is also a Java version somewhere.
+share improve this answer follow
+edited Apr 20 at 11:52
+community wiki
+
+8 revs, 5 users 47%
+user1686
+
+add a comment
+37
+
+I would use this simple command:
+
+encoding=$(file -bi myfile.txt)
+
+Or if you want just the actual character set (like utf-8):
+
+encoding=$(file -b --mime-encoding myfile.txt)
+
+share improve this answer follow
+edited Sep 28 '16 at 11:59
+Humpparitari
+10311 silver badge55 bronze badges
+answered Oct 28 '11 at 18:52
+user103313
+
+    5
+    Unfortunately, file only detects encodings with specific properties, such as UTF-8 or UTF-16. The rest -- oldish ISO8859 or their MS-DOS and Windows correspondents -- are listed as "unknown-8bit" or something similar, even for files which chardet detects with 99% confidence. - user1686 Oct 28 '11 at 19:09 
+
+    7
+    file showed me iso-8859-1 - cweiske Mar 30 '12 at 7:22
+    What if the extension is lying?  james.garriss Oct 3 '14 at 13:24
+    3
+    @james.garriss: file extension has nothing to do with its (text) content encoding. - MestreLion Nov 28 '14 at 12:18
+
+add a comment
+30
+
+On Debian-based Linux, the uchardet package (Debian / Ubuntu) provides a command line tool. See below the package description:
+
+ universal charset detection library - cli utility
+ .
+ uchardet is a C language binding of the original C++ implementation
+ of the universal charset detection library by Mozilla.
+ .
+ uchardet is a encoding detector library, which takes a sequence of
+ bytes in an unknown character encoding without any additional
+ information, and attempts to determine the encoding of the text.
+ .
+ The original code of universalchardet is available at
+ http://lxr.mozilla.org/seamonkey/source/extensions/universalchardet
+ .
+ Techniques used by universalchardet are described at
+ http://www.mozilla.org/projects/intl/UniversalCharsetDetection.html
+
+share improve this answer follow
+edited Dec 16 '15 at 14:00
+zanetu
+10333 bronze badges
+answered Jun 18 '13 at 12:44
+Xavier
+43444 silver badges33 bronze badges
+
+    3
+    Thanks! From the project's homepage it wasn't obvious to me that there was a CLI included. It's also available on OS X when installing uchardet via Homebrew. - Stefan Schmidt Jul 6 '13 at 14:47
+    1
+    I was a little confused at first because a ISO 8859-1 document was falsely identified as Windows-1252 but in the printable range Windows-1252 is a superset of ISO 8859-1 so conversion with iconv works fine. - Stefan Schmidt Jul 6 '13 at 14:56
+
+add a comment
+16
+
+For Linux, there is enca and for Solaris you can use auto_ef.
+share improve this answer follow
+answered Jun 24 '11 at 8:38
+cularis
+1,18977 silver badges1010 bronze badges
+
+    Enca seems too strict for me: enca -d -L zh ./a.txt failed with message ./a.txt: Unrecognized encoding Failure reason: No clear winner. As @grawity mentioned, chardet is more lax, however it's yet too slow. - Xie Jilei Jun 25 '11 at 7:06
+    11
+    Enca completely fails the "actually does something" test. - Michael Wolf Mar 1 '12 at 18:59
+    1
+    uchardet failed (detected CP1252 instead of the actual CP1250), but enca worked fine. (single example, hard to generalize...) - Palo Nov 16 '15 at 20:52
+
+add a comment
+2
+
+Mozilla has a nice codebase for auto-detection in web pages:
+http://lxr.mozilla.org/seamonkey/source/extensions/universalchardet/src/
+
+Detailed description of the algorithm:
+http://www-archive.mozilla.org/projects/intl/UniversalCharsetDetection.html
+share improve this answer follow
+answered Oct 11 '13 at 16:06
+Martin Hennings
+12144 bronze badges
+add a comment
+2
+
+For those regularly using Emacs, they might find the following useful (allows to inspect and validate manually the transfomation).
+
+Moreover I often find that the Emacs char-set auto-detection is much more efficient than the other char-set auto-detection tools (such as chardet).
+
+(setq paths (mapcar 'file-truename '(
+ "path/to/file1"
+ "path/to/file2"
+ "path/to/file3"
+)))
+
+(dolist (path paths)
+  (find-file path)
+  (set-buffer-file-coding-system 'utf-8-unix)
+  )
+
+Then, a simple call to Emacs with this script as argument (see the "-l" option) does the job.
+share improve this answer follow
+answered Nov 6 '18 at 15:42
+Yves Lhuillier
+2122 bronze badges
+add a comment
+1
+
+UTFCast is worth a try. Didn't work for me (maybe because my files are terrible) but it looks good.
+
+http://www.addictivetips.com/windows-tips/how-to-batch-convert-text-files-to-utf-8-encoding/
+share improve this answer follow
+answered Sep 3 '11 at 0:48
+Sameer Alibhai
+24911 gold badge33 silver badges88 bronze badges
+add a comment
+1
+
+Getting back to chardet (python 2.?) this call might be enough:
+
+python -c 'import chardet,sys; print chardet.detect(sys.stdin.read())' < file
+{'confidence': 0.98999999999999999, 'encoding': 'utf-8'}
+
+Though it's far from perfect....
+
+echo "oasd" | iconv -t ISO-8859-1 | python -c 'import chardet,sys; print chardet.detect(sys.stdin.read())'
+{'confidence': 0.5, 'encoding': 'windows-1252'}
+
+share improve this answer follow
+answered Jan 23 '14 at 16:12
+estani
+59655 silver badges1111 bronze badges
+add a comment
+1
+
+isutf8 (from the moreutils package) did the job
+share improve this answer follow
+answered Oct 28 '15 at 17:34
+Ronan
+20922 silver badges22 bronze badges
+
+    2
+    How? This answer isn't really helpful. - user201262 Oct 28 '15 at 19:02
+    2
+    It's not exactly was asked, but is a useful tool. If the file is valid UTF-8, the exit status is zero. If the file is not valid UTF-8, or there is some error, the exit status is non-zero. - ton Feb 16 '16 at 17:34
+
+add a comment
+0
+
+Also in case you file -i gives you unknown
+
+You can use this php command that can guess charset like below :
+
+In php you can check like below :
+
+Specifying encoding list explicitly :
+
+php -r "echo 'probably : ' . mb_detect_encoding(file_get_contents('myfile.txt'), 'UTF-8, ASCII, JIS, EUC-JP, SJIS, iso-8859-1') . PHP_EOL;"
+
+More accurate "mb_list_encodings":
+
+php -r "echo 'probably : ' . mb_detect_encoding(file_get_contents('myfile.txt'), mb_list_encodings()) . PHP_EOL;"
+
+Here in first example, you can see that i put a list of encodings (detect list order) that might be matching. To have more accurate result you can use all possible encodings via : mb_list_encodings()
+
+Note mb_* functions require php-mbstring
+
+apt-get install php-mbstring 
+
+See answer : https://stackoverflow.com/a/57010566/3382822
+share improve this answer follow
+answered Jul 12 '19 at 16:39
+Mohamed23gharbi
+10122 bronze badges
+add a comment
+Your Answer
+
+Sign up or log in
+Post as a guest
+Name
+Email
+
+Required, but never shown
+
+By clicking "Post Your Answer", you agree to our terms of service, privacy policy and cookie policy
+Not the answer you're looking for? Browse other questions tagged linux batch encoding or ask your own question.
+
+    The Overflow Blog
+
+The Overflow #43: Simulated keyboards
+
+    How to communicate more deliberately and efficiently when working remotely
+    Featured on Meta
+    Responding to the Lavender Letter and commitments moving forward
+
+Linked
+93
+How do I find the encoding of the current buffer in vim?
+Related
+2
+Converting Filename Encoding
+2
+Change text encoding into Filelocator Pro?
+2
+Subtitle encoding issue with mkvtoolnix
+0
+encoding image into text.. resulting: smaller 'raw' text
+6
+How to change LibreOffice default text encoding?
+0
+Binary encoding formats
+2
+How to convert this string to Japanese using GNU/Linux tools?
+0
+Fix/revert wrong encoding of file
+Hot Network Questions
+
+    Can I thaw salmon directly in water?
+    What to do when I'm forced to make battle decisions by other players?
+    Placed in equivalent freezers, would a liter of water or a liter of lava turn from liquid to solid first? (question from a 6 year old)
+    Python3 - merge sort, O(n) space efficiency
+    A distinction between knowledge of laws of physics and the actual laws
+    Is it illegal in Germany to spread a list of locations that allow you to violate compulsory mask wearing
+    What are the permitted shapes of a Wall of Fire?
+    Converting grayscale VRT to palleted VRT using GDAL tools
+    What natural force would prevent dragons from burning all the forests in the world?
+    Why doesn't a simple HTTP request to display a remote web page violate the Same Origin Policy?
+    What is the purpose of whipping a bike?
+    Light: Intensity vs Brightness
+    Parenthesis disappears when I use align environment
+    How can I reproduce this mandala with Mathematica?
+    Rectangles in rectangles
+    During the breakup of the Soviet Union, on what basis was citizenship granted or withheld for each of the fifteen new republics?
+    The politicization of the supreme court
+    Origin of "ish kabibble" as an interjection i.e. 'What, me worry?'
+    Defending a planet's surface from ships in orbit
+    Drawing a complete graph of 5 nodes on a torus
+    Basic alternative to fn_LocalTimeToUTC
+    How powerful can a 20th-level Wizard make a 1st-level Fighter without allowing him to realize it is the Wizard's doing?
+    How would you write to your in-class team, that you are going to drop the class, leaving no hard feelings?
+    How does one prove one's residency to a given US state when flying to Costa Rica?
+
+Question feed
+
+Super User
+
+    Tour
+    Help
+    Chat
+    Contact
+    Feedback
+    Mobile
+    Disable Responsiveness
+
+Company
+
+    Stack Overflow
+    For Teams
+    Advertise With Us
+    Hire a Developer
+    Developer Jobs
+    About
+    Press
+    Legal
+    Privacy Policy
+
+Stack Exchange
+Network
+
+    Technology
+    Life / Arts
+    Culture / Recreation
+    Science
+    Other
+
+    Blog
+    Facebook
+    Twitter
+    LinkedIn
+    Instagram
+
+site design / logo c 2020 Stack Exchange Inc; user contributions licensed under cc by-sa. rev 2020.10.19.37833
+ 

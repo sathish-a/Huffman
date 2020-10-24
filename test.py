@@ -8,11 +8,19 @@ class TestHuffman(unittest.TestCase):
 	# function name should be prefixed with 'test'
 
 	def test_encode(self):
-		encode("", "")
+		encode("test_file.txt", "test_file.huff")
+		assert True
+
+	def test_encode(self):
+		encode("story.txt", "story.huff")
 		assert True
 
 	def test_decode(self):
-		decode("", "")
+		decode("test_file.huff", "test_file_.txt")
+		assert True
+
+	def test_decode(self):
+		decode("story.huff", "story_.txt")
 		assert True
 
 
