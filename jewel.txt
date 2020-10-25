@@ -1,0 +1,7 @@
+"Precious Jewel"
+
+* Diamond
+* Ruby
+* Pearl
+* Sapphire
+* Gold
